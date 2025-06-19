@@ -9,6 +9,7 @@ import (
 
 var ErrInvalidString = errors.New("invalid string")
 
+// Unpack распаковывает строку, повторяя символы по указанной цифре и поддерживая экранирование.
 func Unpack(input string) (string, error) {
 	if input == "" {
 		return "", nil
@@ -26,7 +27,11 @@ func Unpack(input string) (string, error) {
 		if escape {
 			count := 1
 			if runeKey+1 < len(runes) && unicode.IsDigit(runes[runeKey+1]) {
-				count, _ = strconv.Atoi(string(runes[runeKey+1]))
+				countStr := string(runes[runeKey+1])
+				_, err := strconv.Atoi(countStr)
+				if err != nil {
+					return "", ErrInvalidString
+				}
 				if runeKey+2 < len(runes) && unicode.IsDigit(runes[runeKey+2]) {
 					return "", ErrInvalidString
 				}
@@ -49,7 +54,11 @@ func Unpack(input string) (string, error) {
 		if runeKey+1 < len(runes) {
 			nextRune := runes[runeKey+1]
 			if unicode.IsDigit(nextRune) && !escape {
-				count, _ := strconv.Atoi(string(nextRune))
+				countStr := string(nextRune)
+				count, err := strconv.Atoi(countStr)
+				if err != nil {
+					return "", ErrInvalidString
+				}
 				if runeKey+2 < len(runes) && unicode.IsDigit(runes[runeKey+2]) {
 					return "", ErrInvalidString
 				}
@@ -57,9 +66,7 @@ func Unpack(input string) (string, error) {
 			} else if !escape {
 				builder.WriteString(string(r))
 			}
-		}
-
-		if runeKey == len(runes)-1 && !escape {
+		} else if !escape {
 			builder.WriteString(string(r))
 		}
 	}
