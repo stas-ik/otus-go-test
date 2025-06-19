@@ -9,70 +9,69 @@ import (
 
 var ErrInvalidString = errors.New("invalid string")
 
-// Unpack распаковывает строку, повторяя символы по указанной цифре и поддерживая экранирование.
 func Unpack(input string) (string, error) {
 	if input == "" {
 		return "", nil
 	}
 
-	if unicode.IsDigit([]rune(input)[0]) {
-		return "", ErrInvalidString
-	}
-
 	var builder strings.Builder
 	runes := []rune(input)
-	escape := false
+	length := len(runes)
 
-	for runeKey, r := range runes {
-		if escape {
-			count := 1
-			if runeKey+1 < len(runes) && unicode.IsDigit(runes[runeKey+1]) {
-				countStr := string(runes[runeKey+1])
-				_, err := strconv.Atoi(countStr)
-				if err != nil {
-					return "", ErrInvalidString
-				}
-				if runeKey+2 < len(runes) && unicode.IsDigit(runes[runeKey+2]) {
-					return "", ErrInvalidString
-				}
-				runeKey++
-			}
-			builder.WriteString(strings.Repeat(string(r), count))
-			escape = false
-			continue
+	for i := 0; i < length; {
+		r := runes[i]
+
+		if unicode.IsDigit(r) {
+			return "", ErrInvalidString
 		}
 
 		if r == '\\' {
-			escape = true
-			continue
-		}
+			i++
+			if i >= length {
+				return "", ErrInvalidString
+			}
+			escaped := runes[i]
+			i++
 
-		if unicode.IsDigit(r) {
-			continue
-		}
+			start := i
+			for i < length && unicode.IsDigit(runes[i]) {
+				i++
+			}
 
-		if runeKey+1 < len(runes) {
-			nextRune := runes[runeKey+1]
-			if unicode.IsDigit(nextRune) && !escape {
-				countStr := string(nextRune)
-				count, err := strconv.Atoi(countStr)
+			count := 1
+			if start < i {
+				numStr := string(runes[start:i])
+				var err error
+				count, err = strconv.Atoi(numStr)
 				if err != nil {
 					return "", ErrInvalidString
 				}
-				if runeKey+2 < len(runes) && unicode.IsDigit(runes[runeKey+2]) {
-					return "", ErrInvalidString
-				}
-				builder.WriteString(strings.Repeat(string(r), count))
-			} else if !escape {
-				builder.WriteString(string(r))
 			}
-		} else if !escape {
-			builder.WriteString(string(r))
-		}
-	}
 
-	if escape {
-		return "", ErrInvalidString
+			builder.WriteString(strings.Repeat(string(escaped), count))
+			continue
+		}
+
+		ch := r
+		i++
+
+		count := 1
+		if i < length && unicode.IsDigit(runes[i]) {
+			countRune := runes[i]
+			i++
+
+			if i < length && unicode.IsDigit(runes[i]) {
+				return "", ErrInvalidString
+			}
+
+			var err error
+			count, err = strconv.Atoi(string(countRune))
+			if err != nil {
+				return "", ErrInvalidString
+			}
+		}
+
+		builder.WriteString(strings.Repeat(string(ch), count))
 	}
 
 	return builder.String(), nil
