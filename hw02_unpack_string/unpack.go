@@ -2,6 +2,8 @@ package hw02unpackstring
 
 import (
 	"errors"
+	"strconv"
+	"strings"
 	"unicode"
 )
 
@@ -16,7 +18,7 @@ func Unpack(input string) (string, error) {
 		return "", ErrInvalidString
 	}
 
-	result := ""
+	var builder strings.Builder
 	runes := []rune(input)
 	escape := false
 
@@ -24,15 +26,13 @@ func Unpack(input string) (string, error) {
 		if escape {
 			count := 1
 			if runeKey+1 < len(runes) && unicode.IsDigit(runes[runeKey+1]) {
-				count = int(runes[runeKey+1] - '0')
+				count, _ = strconv.Atoi(string(runes[runeKey+1]))
 				if runeKey+2 < len(runes) && unicode.IsDigit(runes[runeKey+2]) {
 					return "", ErrInvalidString
 				}
 				runeKey++
 			}
-			for i := 1; i <= count; i++ {
-				result += string(r)
-			}
+			builder.WriteString(strings.Repeat(string(r), count))
 			escape = false
 			continue
 		}
@@ -49,20 +49,18 @@ func Unpack(input string) (string, error) {
 		if runeKey+1 < len(runes) {
 			nextRune := runes[runeKey+1]
 			if unicode.IsDigit(nextRune) && !escape {
-				number := int(nextRune - '0')
+				count, _ := strconv.Atoi(string(nextRune))
 				if runeKey+2 < len(runes) && unicode.IsDigit(runes[runeKey+2]) {
 					return "", ErrInvalidString
 				}
-				for i := 1; i <= number; i++ {
-					result += string(r)
-				}
+				builder.WriteString(strings.Repeat(string(r), count))
 			} else if !escape {
-				result += string(r)
+				builder.WriteString(string(r))
 			}
 		}
 
 		if runeKey == len(runes)-1 && !escape {
-			result += string(r)
+			builder.WriteString(string(r))
 		}
 	}
 
@@ -70,5 +68,5 @@ func Unpack(input string) (string, error) {
 		return "", ErrInvalidString
 	}
 
-	return result, nil
+	return builder.String(), nil
 }
