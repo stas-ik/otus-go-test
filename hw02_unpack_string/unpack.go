@@ -20,61 +20,74 @@ func Unpack(input string) (string, error) {
 
 	for i := 0; i < length; {
 		r := runes[i]
-
 		if unicode.IsDigit(r) {
 			return "", ErrInvalidString
 		}
 
 		if r == '\\' {
-			i++
-			if i >= length {
-				return "", ErrInvalidString
+			escaped, newIndex, err := processEscapedChar(runes, i, length)
+			if err != nil {
+				return "", err
 			}
-			escaped := runes[i]
-			if escaped != '\\' && !unicode.IsDigit(escaped) {
-				return "", ErrInvalidString
-			}
-			i++
-
-			start := i
-			for i < length && unicode.IsDigit(runes[i]) {
-				i++
-			}
-
-			count := 1
-			if start < i {
-				numStr := string(runes[start:i])
-				var err error
-				count, err = strconv.Atoi(numStr)
-				if err != nil {
-					return "", ErrInvalidString
-				}
-			}
-
-			builder.WriteString(strings.Repeat(string(escaped), count))
+			i = newIndex
+			builder.WriteString(escaped)
 			continue
 		}
 
-		ch := r
-		i++
-
-		count := 1
-		if i < length && unicode.IsDigit(runes[i]) {
-			start := i
-			i++
-			if i < length && unicode.IsDigit(runes[i]) {
-				return "", ErrInvalidString
-			}
-			numStr := string(runes[start:i])
-			var err error
-			count, err = strconv.Atoi(numStr)
-			if err != nil {
-				return "", ErrInvalidString
-			}
+		result, newIndex, err := processRegularChar(runes, i, length)
+		if err != nil {
+			return "", err
 		}
-
-		builder.WriteString(strings.Repeat(string(ch), count))
+		i = newIndex
+		builder.WriteString(result)
 	}
 
 	return builder.String(), nil
+}
+
+func processEscapedChar(runes []rune, index, length int) (string, int, error) {
+	if index+1 >= length {
+		return "", 0, ErrInvalidString
+	}
+
+	escaped := runes[index+1]
+	if escaped != '\\' && !unicode.IsDigit(escaped) {
+		return "", 0, ErrInvalidString
+	}
+
+	count, newIndex, err := parseCount(runes, index+2, length)
+	if err != nil {
+		return "", 0, err
+	}
+
+	return strings.Repeat(string(escaped), count), newIndex, nil
+}
+
+func processRegularChar(runes []rune, index, length int) (string, int, error) {
+	ch := runes[index]
+	count, newIndex, err := parseCount(runes, index+1, length)
+	if err != nil {
+		return "", 0, err
+	}
+
+	return strings.Repeat(string(ch), count), newIndex, nil
+}
+
+func parseCount(runes []rune, index, length int) (int, int, error) {
+	if index >= length || !unicode.IsDigit(runes[index]) {
+		return 1, index, nil
+	}
+
+	start := index
+	index++
+	if index < length && unicode.IsDigit(runes[index]) {
+		return 0, 0, ErrInvalidString
+	}
+
+	count, err := strconv.Atoi(string(runes[start:index]))
+	if err != nil {
+		return 0, 0, ErrInvalidString
+	}
+
+	return count, index, nil
 }
