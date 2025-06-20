@@ -31,6 +31,9 @@ func Unpack(input string) (string, error) {
 				return "", ErrInvalidString
 			}
 			escaped := runes[i]
+			if escaped != '\\' && !unicode.IsDigit(escaped) {
+				return "", ErrInvalidString
+			}
 			i++
 
 			start := i
@@ -57,15 +60,14 @@ func Unpack(input string) (string, error) {
 
 		count := 1
 		if i < length && unicode.IsDigit(runes[i]) {
-			countRune := runes[i]
+			start := i
 			i++
-
 			if i < length && unicode.IsDigit(runes[i]) {
 				return "", ErrInvalidString
 			}
-
+			numStr := string(runes[start:i])
 			var err error
-			count, err = strconv.Atoi(string(countRune))
+			count, err = strconv.Atoi(numStr)
 			if err != nil {
 				return "", ErrInvalidString
 			}
