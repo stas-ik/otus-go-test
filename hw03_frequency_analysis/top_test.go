@@ -79,4 +79,70 @@ func TestTop10(t *testing.T) {
 			require.Equal(t, expected, Top10(text))
 		}
 	})
+
+	t.Run("punctuation as part of words", func(t *testing.T) {
+		input := "cat, cat dog, dog! dog dog."
+		expected := []string{
+			"cat",  // 1
+			"cat,", // 1
+			"dog",  // 1
+			"dog!", // 1
+			"dog,", // 1
+			"dog.", // 1
+		}
+		require.Equal(t, expected, Top10(input))
+	})
+
+	t.Run("dash as separate word", func(t *testing.T) {
+		input := "word1 - word2 - word3 word1 - word1"
+		expected := []string{
+			"-",     // 3
+			"word1", // 3
+			"word2", // 1
+			"word3", // 1
+		}
+		require.Equal(t, expected, Top10(input))
+	})
+
+	t.Run("case sensitivity", func(t *testing.T) {
+		input := "Cat cat CAT cAt"
+		expected := []string{
+			"CAT", // 1
+			"Cat", // 1
+			"cAt", // 1
+			"cat", // 1
+		}
+		require.Equal(t, expected, Top10(input))
+	})
+
+	t.Run("equal frequency lexicographic sort", func(t *testing.T) {
+		input := "zebra apple banana cat dog eagle"
+		expected := []string{
+			"apple",  // 1
+			"banana", // 1
+			"cat",    // 1
+			"dog",    // 1
+			"eagle",  // 1
+			"zebra",  // 1
+		}
+		require.Equal(t, expected, Top10(input))
+	})
+
+	t.Run("more than 10 words with same frequency", func(t *testing.T) {
+		input := "a b c d e f g h i j k l m"
+		expected := []string{
+			"a", // 1
+			"b", // 1
+			"c", // 1
+			"d", // 1
+			"e", // 1
+			"f", // 1
+			"g", // 1
+			"h", // 1
+			"i", // 1
+			"j", // 1
+		}
+		require.Equal(t, expected, Top10(input))
+	})
+
 }
