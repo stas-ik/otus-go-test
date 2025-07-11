@@ -50,13 +50,73 @@ func TestCache(t *testing.T) {
 	})
 
 	t.Run("purge logic", func(t *testing.T) {
-		// Write me
+		// Тест на выталкивание элементов из-за размера
+		t.Run("eviction due to capacity", func(t *testing.T) {
+			c := NewCache(3)
+
+			// Добавляем 3 элемента
+			c.Set("a", 1)
+			c.Set("b", 2)
+			c.Set("c", 3)
+
+			// Проверяем, что все элементы на месте
+			val, ok := c.Get("a")
+			require.True(t, ok)
+			require.Equal(t, 1, val)
+
+			val, ok = c.Get("b")
+			require.True(t, ok)
+			require.Equal(t, 2, val)
+
+			val, ok = c.Get("c")
+			require.True(t, ok)
+			require.Equal(t, 3, val)
+
+			// Добавляем 4-й элемент, должен вытесниться "a" (наименее недавно использованный)
+			c.Set("d", 4)
+			_, ok = c.Get("a")
+			require.False(t, ok) // "a" должен быть вытеснен
+			val, ok = c.Get("b")
+			require.True(t, ok)
+			require.Equal(t, 2, val)
+			val, ok = c.Get("c")
+			require.True(t, ok)
+			require.Equal(t, 3, val)
+			val, ok = c.Get("d")
+			require.True(t, ok)
+			require.Equal(t, 4, val)
+		})
+
+		// Тест на выталкивание давно используемых элементов
+		t.Run("eviction of least recently used", func(t *testing.T) {
+			c := NewCache(3)
+
+			c.Set("a", 1)
+			c.Set("b", 2)
+			c.Set("c", 3)
+
+			c.Get("a")
+			c.Set("b", 20)
+
+			// Добавляем 4-й элемент, должен вытесниться "c" (наименее недавно использованный)
+			c.Set("d", 4)
+			_, ok := c.Get("c")
+			require.False(t, ok)
+			var val interface{}
+			val, ok = c.Get("a")
+			require.True(t, ok)
+			require.Equal(t, 1, val)
+			val, ok = c.Get("b")
+			require.True(t, ok)
+			require.Equal(t, 20, val)
+			val, ok = c.Get("d")
+			require.True(t, ok)
+			require.Equal(t, 4, val)
+		})
 	})
 }
 
-func TestCacheMultithreading(t *testing.T) {
-	t.Skip() // Remove me if task with asterisk completed.
-
+func TestCacheMultithreading(_ *testing.T) {
 	c := NewCache(10)
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
