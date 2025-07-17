@@ -54,16 +54,13 @@ func (c *lruCache) Set(key Key, value interface{}) bool {
 }
 
 func (c *lruCache) Get(key Key) (interface{}, bool) {
-	c.mutex.RLock()
-	defer c.mutex.RUnlock()
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 
 	item, exists := c.items[key]
 	if !exists {
 		return nil, false
 	}
-	c.mutex.RUnlock()
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
 	c.queue.MoveToFront(item)
 	return item.Value, true
 }
