@@ -10,6 +10,11 @@ type Cache interface {
 	Clear()
 }
 
+type CacheEntry struct {
+	Key   Key
+	Value interface{}
+}
+
 type lruCache struct {
 	capacity int
 	queue    List
@@ -30,24 +35,19 @@ func (c *lruCache) Set(key Key, value interface{}) bool {
 	defer c.mutex.Unlock()
 
 	if item, exists := c.items[key]; exists {
-		item.Value = value
+		item.Value.(*CacheEntry).Value = value
 		c.queue.MoveToFront(item)
 		return true
 	}
 
-	item := c.queue.PushFront(value)
+	item := c.queue.PushFront(&CacheEntry{Key: key, Value: value})
 	c.items[key] = item
 
 	if c.queue.Len() > c.capacity {
 		last := c.queue.Back()
 		if last != nil {
-			for k, v := range c.items {
-				if v == last {
-					c.queue.Remove(last)
-					delete(c.items, k)
-					break
-				}
-			}
+			c.queue.Remove(last)
+			delete(c.items, last.Value.(*CacheEntry).Key)
 		}
 	}
 	return false
@@ -62,7 +62,7 @@ func (c *lruCache) Get(key Key) (interface{}, bool) {
 		return nil, false
 	}
 	c.queue.MoveToFront(item)
-	return item.Value, true
+	return item.Value.(*CacheEntry).Value, true
 }
 
 func (c *lruCache) Clear() {
