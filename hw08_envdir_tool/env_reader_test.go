@@ -22,7 +22,7 @@ func TestReadDir(t *testing.T) {
 
 	for name, content := range testFiles {
 		filePath := filepath.Join(tempDir, name)
-		err := os.WriteFile(filePath, []byte(content), 0644)
+		err := os.WriteFile(filePath, []byte(content), 0o644)
 		if err != nil {
 			t.Fatal(err)
 		}
