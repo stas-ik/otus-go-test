@@ -49,7 +49,7 @@ func startDispatcher(tasks []Task, ch chan Task, done chan struct{}, wg *sync.Wa
 	}()
 }
 
-func startWorkers(n int, ch chan Task, done chan struct{}, m int, errCount *int64, once *sync.Once, wg *sync.WaitGroup) {
+func startWorkers(n int, ch chan Task, done chan struct{}, m int, errC *int64, once *sync.Once, wg *sync.WaitGroup) {
 	for i := 0; i < n; i++ {
 		wg.Add(1)
 		go func() {
@@ -63,7 +63,7 @@ func startWorkers(n int, ch chan Task, done chan struct{}, m int, errCount *int6
 						return
 					}
 					if err := task(); err != nil && m > 0 {
-						if atomic.AddInt64(errCount, 1) >= int64(m) {
+						if atomic.AddInt64(errC, 1) >= int64(m) {
 							once.Do(func() { close(done) })
 							return
 						}
