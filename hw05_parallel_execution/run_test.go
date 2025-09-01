@@ -67,4 +67,64 @@ func TestRun(t *testing.T) {
 		require.Equal(t, int32(tasksCount), runTasksCount, "not all tasks were completed")
 		require.LessOrEqual(t, int64(elapsedTime), int64(sumTime/2), "tasks were run sequentially?")
 	})
+
+	t.Run("ignore errors if m <= 0", func(t *testing.T) {
+		tasksCount := 10
+		tasks := make([]Task, 0, tasksCount)
+
+		var runTasksCount int32
+
+		for i := 0; i < tasksCount; i++ {
+			err := errors.New("some error")
+			tasks = append(tasks, func() error {
+				atomic.AddInt32(&runTasksCount, 1)
+				return err
+			})
+		}
+
+		workersCount := 5
+		maxErrorsCount := 0
+
+		err := Run(tasks, workersCount, maxErrorsCount)
+		require.NoError(t, err)
+		require.Equal(t, int32(tasksCount), runTasksCount, "all tasks should be completed")
+	})
+
+	t.Run("empty tasks", func(t *testing.T) {
+		err := Run([]Task{}, 5, 3)
+		require.NoError(t, err)
+	})
+
+	t.Run("concurrency without sleep", func(t *testing.T) {
+		workersCount := 5
+		tasksCount := 10
+		tasks := make([]Task, 0, tasksCount)
+		var running int32
+		pauseCh := make(chan struct{})
+
+		for i := 0; i < tasksCount; i++ {
+			tasks = append(tasks, func() error {
+				atomic.AddInt32(&running, 1)
+				<-pauseCh
+				atomic.AddInt32(&running, -1)
+				return nil
+			})
+		}
+
+		doneCh := make(chan error)
+		go func() {
+			doneCh <- Run(tasks, workersCount, 1)
+		}()
+
+		require.Eventually(t, func() bool {
+			return atomic.LoadInt32(&running) == int32(workersCount)
+		}, 5*time.Second, 10*time.Millisecond, "not all workers are running concurrently")
+
+		for i := 0; i < tasksCount; i++ {
+			pauseCh <- struct{}{}
+		}
+
+		err := <-doneCh
+		require.NoError(t, err)
+	})
 }
