@@ -17,20 +17,17 @@ func Run(tasks []Task, n, m int) error {
 	}
 
 	ch := make(chan Task)
-	errCh := make(chan struct{})
+	done := make(chan struct{})
 	var wg sync.WaitGroup
 	var errCount int64
 
-	startWorkers(n, ch, errCh, m, &wg)
+	startWorkers(n, ch, done, m, &errCount, &wg)
 
-Loop:
 	for _, task := range tasks {
 		select {
+		case <-done:
+			break
 		case ch <- task:
-		case <-errCh:
-			if atomic.AddInt64(&errCount, 1) == int64(m) && m > 0 {
-				break Loop
-			}
 		}
 	}
 	close(ch)
@@ -43,14 +40,25 @@ Loop:
 	return nil
 }
 
-func startWorkers(n int, ch chan Task, errCh chan struct{}, m int, wg *sync.WaitGroup) {
+func startWorkers(n int, ch chan Task, done chan struct{}, m int, errC *int64, wg *sync.WaitGroup) {
 	for i := 0; i < n; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for task := range ch {
-				if err := task(); err != nil && m > 0 {
-					errCh <- struct{}{}
+			for {
+				select {
+				case <-done:
+					return
+				case task, ok := <-ch:
+					if !ok {
+						return
+					}
+					if err := task(); err != nil && m > 0 {
+						if atomic.AddInt64(errC, 1) == int64(m) {
+							close(done)
+							return
+						}
+					}
 				}
 			}
 		}()
