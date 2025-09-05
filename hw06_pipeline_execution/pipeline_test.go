@@ -1,4 +1,4 @@
-package hw06pipelineexecution
+package hw06_pipeline_execution
 
 import (
 	"strconv"
@@ -58,7 +58,6 @@ func TestPipeline(t *testing.T) {
 		require.Equal(t, []string{"102", "104", "106", "108", "110"}, result)
 		require.Less(t,
 			int64(elapsed),
-			// ~0.8s for processing 5 values in 4 stages (100ms every) concurrently
 			int64(sleepPerStage)*int64(len(stages)+len(data)-1)+int64(fault))
 	})
 
@@ -67,7 +66,6 @@ func TestPipeline(t *testing.T) {
 		done := make(Bi)
 		data := []int{1, 2, 3, 4, 5}
 
-		// Abort after 200ms
 		abortDur := sleepPerStage * 2
 		go func() {
 			<-time.After(abortDur)
@@ -124,7 +122,6 @@ func TestAllStageStop(t *testing.T) {
 		done := make(Bi)
 		data := []int{1, 2, 3, 4, 5}
 
-		// Abort after 200ms
 		abortDur := sleepPerStage * 2
 		go func() {
 			<-time.After(abortDur)
@@ -145,6 +142,67 @@ func TestAllStageStop(t *testing.T) {
 		wg.Wait()
 
 		require.Len(t, result, 0)
+	})
 
+	t.Run("empty input", func(t *testing.T) {
+		in := make(Bi)
+		close(in)
+		result := make([]string, 0)
+		for s := range ExecutePipeline(in, nil, stages...) {
+			result = append(result, s.(string))
+		}
+		require.Empty(t, result)
+	})
+
+	t.Run("error in stage", func(t *testing.T) {
+		errorStage := func(in In) Out {
+			out := make(Bi)
+			go func() {
+				defer close(out)
+				for range in {
+					out <- nil
+					return
+				}
+			}()
+			return out
+		}
+		in := make(Bi)
+		in <- 1
+		close(in)
+		done := make(Bi)
+		result := make([]interface{}, 0)
+		for s := range ExecutePipeline(in, done, errorStage) {
+			result = append(result, s)
+		}
+		close(done)
+		require.Contains(t, result, nil)
+	})
+
+	t.Run("large input", func(t *testing.T) {
+		in := make(Bi)
+		data := make([]int, 100)
+		for i := range data {
+			data[i] = i + 1
+		}
+		go func() {
+			for _, v := range data {
+				in <- v
+			}
+			close(in)
+		}()
+
+		result := make([]string, 0, 100)
+		start := time.Now()
+		for s := range ExecutePipeline(in, nil, stages...) {
+			result = append(result, s.(string))
+		}
+		elapsed := time.Since(start)
+
+		expected := make([]string, 100)
+		for i := range expected {
+			expected[i] = strconv.Itoa((i+1)*2 + 100)
+		}
+		require.Equal(t, expected, result)
+		require.Less(t, int64(elapsed), int64(sleepPerStage)*int64(len(stages)+len(data)-1)+int64(fault))
 	})
 }

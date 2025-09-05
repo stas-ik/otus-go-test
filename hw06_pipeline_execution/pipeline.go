@@ -1,4 +1,4 @@
-package hw06pipelineexecution
+package hw06_pipeline_execution
 
 type (
 	In  = <-chan interface{}
@@ -6,9 +6,61 @@ type (
 	Bi  = chan interface{}
 )
 
-type Stage func(in In) (out Out)
+type Stage func(in In) Out
 
 func ExecutePipeline(in In, done In, stages ...Stage) Out {
-	// Place your code here.
-	return nil
+	out := make(Bi)
+	current := in
+
+	for _, stage := range stages {
+		next := make(Bi)
+		go func(inCh In, st Stage) {
+			defer close(next)
+			for {
+				select {
+				case <-done:
+					return
+				case v, ok := <-inCh:
+					if !ok {
+						return
+					}
+					tempCh := make(Bi)
+					go func() {
+						defer close(tempCh)
+						tempCh <- v
+					}()
+					outCh := st(tempCh)
+					for val := range outCh {
+						select {
+						case <-done:
+							return
+						case next <- val:
+						}
+					}
+				}
+			}
+		}(current, stage)
+		current = next
+	}
+
+	go func() {
+		defer close(out)
+		for {
+			select {
+			case <-done:
+				return
+			case v, ok := <-current:
+				if !ok {
+					return
+				}
+				select {
+				case <-done:
+					return
+				case out <- v:
+				}
+			}
+		}
+	}()
+
+	return out
 }
