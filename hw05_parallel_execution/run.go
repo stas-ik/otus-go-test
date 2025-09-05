@@ -28,7 +28,7 @@ Loop:
 		select {
 		case ch <- task:
 		case <-errCh:
-			if atomic.AddInt64(&errCount, 1) >= int64(m) && m > 0 {
+			if atomic.AddInt64(&errCount, 1) == int64(m) && m > 0 {
 				break Loop
 			}
 		}
