@@ -166,7 +166,7 @@ func TestAllStageStop(t *testing.T) {
 			}()
 			return out
 		}
-		in := make(Bi)
+		in := make(Bi, 1)
 		in <- 1
 		close(in)
 		done := make(Bi)
