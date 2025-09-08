@@ -8,48 +8,15 @@ type (
 
 type Stage func(in In) Out
 
-func ExecutePipeline(in In, done In, stages ...Stage) Out {
+func pipeWithDone(src In, done In) Out {
 	out := make(Bi)
-	current := in
-
-	for _, stage := range stages {
-		next := make(Bi)
-		go func(inCh In, st Stage) {
-			defer close(next)
-			for {
-				select {
-				case <-done:
-					return
-				case v, ok := <-inCh:
-					if !ok {
-						return
-					}
-					tempCh := make(Bi)
-					go func() {
-						defer close(tempCh)
-						tempCh <- v
-					}()
-					outCh := st(tempCh)
-					for val := range outCh {
-						select {
-						case <-done:
-							return
-						case next <- val:
-						}
-					}
-				}
-			}
-		}(current, stage)
-		current = next
-	}
-
 	go func() {
 		defer close(out)
 		for {
 			select {
 			case <-done:
 				return
-			case v, ok := <-current:
+			case v, ok := <-src:
 				if !ok {
 					return
 				}
@@ -61,6 +28,19 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 			}
 		}
 	}()
-
 	return out
+}
+
+func ExecutePipeline(in In, done In, stages ...Stage) Out {
+	current := in
+	if len(stages) == 0 {
+		return pipeWithDone(current, done)
+	}
+
+	for _, st := range stages {
+		wrappedIn := pipeWithDone(current, done)
+		current = st(wrappedIn)
+	}
+
+	return current
 }
