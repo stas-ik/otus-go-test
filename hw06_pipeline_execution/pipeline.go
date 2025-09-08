@@ -1,4 +1,4 @@
-package hw06_pipeline_execution
+package hw06pipelineexecution
 
 type (
 	In  = <-chan interface{}
@@ -13,14 +13,6 @@ func pipeWithDone(src In, done In) Out {
 	go func() {
 		defer close(out)
 		for {
-			if done == nil {
-				v, ok := <-src
-				if !ok {
-					return
-				}
-				out <- v
-				continue
-			}
 			select {
 			case <-done:
 				return
