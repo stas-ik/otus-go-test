@@ -16,7 +16,8 @@ func pipeWithDone(src In, done In) Out {
 			select {
 			case <-done:
 				go func() {
-					for range src {
+					for v := range src {
+						_ = v
 					}
 				}()
 				return
@@ -27,7 +28,8 @@ func pipeWithDone(src In, done In) Out {
 				select {
 				case <-done:
 					go func() {
-						for range src {
+						for vv := range src {
+							_ = vv
 						}
 					}()
 					return
