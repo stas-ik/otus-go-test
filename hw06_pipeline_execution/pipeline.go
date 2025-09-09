@@ -15,6 +15,10 @@ func pipeWithDone(src In, done In) Out {
 		for {
 			select {
 			case <-done:
+				go func() {
+					for range src {
+					}
+				}()
 				return
 			case v, ok := <-src:
 				if !ok {
@@ -22,6 +26,10 @@ func pipeWithDone(src In, done In) Out {
 				}
 				select {
 				case <-done:
+					go func() {
+						for range src {
+						}
+					}()
 					return
 				case out <- v:
 				}
@@ -39,7 +47,8 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 
 	for _, st := range stages {
 		wrappedIn := pipeWithDone(current, done)
-		current = st(wrappedIn)
+		stageOut := st(wrappedIn)
+		current = pipeWithDone(stageOut, done)
 	}
 
 	return current
