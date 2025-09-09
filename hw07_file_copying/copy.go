@@ -63,26 +63,29 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 			chunk = int64(len(buf))
 		}
 		n, rerr := io.ReadFull(src, buf[:chunk])
-		if rerr != nil {
-			if rerr == io.EOF || errors.Is(rerr, io.ErrUnexpectedEOF) {
-				if n > 0 {
-					wn, werr := dst.Write(buf[:n])
-					copied += int64(wn)
-					if werr != nil {
-						return werr
-					}
-				}
-				break
+		if rerr == nil {
+			wn, werr := dst.Write(buf[:n])
+			copied += int64(wn)
+			if werr != nil {
+				return werr
 			}
-			return rerr
+			pct := int(float64(copied) / float64(toCopy) * 100)
+			fmt.Printf("%d%%\n", pct)
+			continue
 		}
-		wn, werr := dst.Write(buf[:n])
-		copied += int64(wn)
-		if werr != nil {
-			return werr
+
+		if rerr == io.EOF || errors.Is(rerr, io.ErrUnexpectedEOF) {
+			if n > 0 {
+				wn, werr := dst.Write(buf[:n])
+				copied += int64(wn)
+				if werr != nil {
+					return werr
+				}
+			}
+			break
 		}
-		pct := int(float64(copied) / float64(toCopy) * 100)
-		fmt.Printf("%d%%\n", pct)
+
+		return rerr
 	}
 
 	if copied >= toCopy {

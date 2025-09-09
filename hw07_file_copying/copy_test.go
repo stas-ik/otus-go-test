@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -83,7 +82,6 @@ func TestCopy(t *testing.T) {
 	})
 
 	t.Run("unsupported_file", func(t *testing.T) {
-		// Use directory as unsupported source
 		dir := td
 		out := tempFile(t)
 		defer os.Remove(out)
@@ -96,7 +94,7 @@ func TestCopy(t *testing.T) {
 
 func tempFile(t *testing.T) string {
 	t.Helper()
-	f, err := ioutil.TempFile("", "copytest-*.out")
+	f, err := os.CreateTemp("", "copytest-*.out")
 	if err != nil {
 		t.Fatalf("TempFile: %v", err)
 	}
