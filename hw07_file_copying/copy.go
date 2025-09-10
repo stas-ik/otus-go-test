@@ -12,6 +12,42 @@ var (
 	ErrOffsetExceedsFileSize = errors.New("offset exceeds file size")
 )
 
+type progressWriter struct {
+	dst     io.Writer
+	total   int64
+	written int64
+	lastPct int
+}
+
+func newProgressWriter(dst io.Writer, total int64) *progressWriter {
+	return &progressWriter{
+		dst:     dst,
+		total:   total,
+		lastPct: -1,
+	}
+}
+
+func (pw *progressWriter) Write(p []byte) (int, error) {
+	n, err := pw.dst.Write(p)
+	pw.written += int64(n)
+	pw.printProgress()
+	return n, err
+}
+
+func (pw *progressWriter) printProgress() {
+	if pw.total <= 0 {
+		return
+	}
+	pct := int(float64(pw.written) / float64(pw.total) * 100)
+	if pct > 100 {
+		pct = 100
+	}
+	if pct > pw.lastPct {
+		fmt.Printf("%d%%\n", pct)
+		pw.lastPct = pct
+	}
+}
+
 func Copy(fromPath, toPath string, offset, limit int64) error {
 	src, err := os.Open(fromPath)
 	if err != nil {
@@ -40,10 +76,6 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		_ = dst.Close()
 	}()
 
-	if _, err := src.Seek(offset, io.SeekStart); err != nil {
-		return err
-	}
-
 	remaining := fileSize - offset
 	toCopy := limit
 	if limit == 0 || limit > remaining {
@@ -55,41 +87,18 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		return nil
 	}
 
+	section := io.NewSectionReader(src, offset, toCopy)
+
+	pw := newProgressWriter(dst, toCopy)
+
 	buf := make([]byte, 32*1024)
-	var copied int64
-	for copied < toCopy {
-		chunk := toCopy - copied
-		if int64(len(buf)) < chunk {
-			chunk = int64(len(buf))
-		}
-		n, rerr := io.ReadFull(src, buf[:chunk])
-		if rerr == nil {
-			wn, werr := dst.Write(buf[:n])
-			copied += int64(wn)
-			if werr != nil {
-				return werr
-			}
-			pct := int(float64(copied) / float64(toCopy) * 100)
-			fmt.Printf("%d%%\n", pct)
-			continue
-		}
-
-		if rerr == io.EOF || errors.Is(rerr, io.ErrUnexpectedEOF) {
-			if n > 0 {
-				wn, werr := dst.Write(buf[:n])
-				copied += int64(wn)
-				if werr != nil {
-					return werr
-				}
-			}
-			break
-		}
-
-		return rerr
+	if _, err := io.CopyBuffer(pw, section, buf); err != nil {
+		return err
 	}
 
-	if copied >= toCopy {
+	if pw.lastPct < 100 {
 		fmt.Println("100%")
 	}
+
 	return nil
 }
