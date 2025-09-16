@@ -1,5 +1,3 @@
-// Package hw09structvalidator provides a simple struct validation utility
-// that validates exported struct fields according to "validate" tags.
 package hw09structvalidator
 
 import (
@@ -11,14 +9,11 @@ import (
 	"strings"
 )
 
-// ValidationError represents a validation failure for a specific field.
-// Field contains the field (optionally with index for slices) and Err holds the rule error.
 type ValidationError struct {
 	Field string
 	Err   error
 }
 
-// ValidationErrors is a collection of ValidationError that implements the error interface.
 type ValidationErrors []ValidationError
 
 // Error implements the error interface for ValidationErrors.
@@ -36,25 +31,15 @@ func (v ValidationErrors) Error() string {
 	return b.String()
 }
 
-// Exposed error variables describing validation and programming errors.
-// They are used both for signaling programming/config errors and for matching rule failures.
 var (
-	// ErrNotStruct is returned when the input to Validate is not a struct (or a non-nil pointer to struct).
-	ErrNotStruct = errors.New("input is not a struct")
-	// ErrUnsupported indicates a field type is not supported by the validator for the provided rules.
+	ErrNotStruct   = errors.New("input is not a struct")
 	ErrUnsupported = errors.New("unsupported type for validation")
-	// ErrInvalidTag indicates an invalid validate tag or parameter.
-	ErrInvalidTag = errors.New("invalid validate tag")
-	// ErrRuleLen indicates the string length rule has failed.
-	ErrRuleLen = errors.New("len rule failed")
-	// ErrRuleRegexp indicates the regexp rule has failed.
-	ErrRuleRegexp = errors.New("regexp rule failed")
-	// ErrRuleIn indicates the inclusion (in) rule has failed.
-	ErrRuleIn = errors.New("in rule failed")
-	// ErrRuleMin indicates the minimum numeric rule has failed.
-	ErrRuleMin = errors.New("min rule failed")
-	// ErrRuleMax indicates the maximum numeric rule has failed.
-	ErrRuleMax = errors.New("max rule failed")
+	ErrInvalidTag  = errors.New("invalid validate tag")
+	ErrRuleLen     = errors.New("len rule failed")
+	ErrRuleRegexp  = errors.New("regexp rule failed")
+	ErrRuleIn      = errors.New("in rule failed")
+	ErrRuleMin     = errors.New("min rule failed")
+	ErrRuleMax     = errors.New("max rule failed")
 )
 
 type rule struct {
@@ -78,8 +63,6 @@ func parseTag(tag string) ([]rule, error) {
 	return rules, nil
 }
 
-// Validate validates exported fields of a struct according to the `validate` struct tag.
-// It returns ValidationErrors for user data errors, or a direct error for programming/tag errors.
 func Validate(v interface{}) error {
 	val := reflect.ValueOf(v)
 	if val.Kind() == reflect.Pointer {
@@ -143,8 +126,23 @@ func validateValue(fieldName string, v reflect.Value, rules []rule, idx int, ver
 				}
 				addVE(verrs, fieldName, idx, err)
 			}
-		default:
+		case reflect.Invalid,
+			reflect.Bool,
+			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
+			reflect.Float32, reflect.Float64,
+			reflect.Complex64, reflect.Complex128,
+			reflect.Array,
+			reflect.Chan,
+			reflect.Func,
+			reflect.Interface,
+			reflect.Map,
+			reflect.Ptr,
+			reflect.Slice,
+			reflect.Struct,
+			reflect.UnsafePointer:
 			return ErrUnsupported
+		default:
+			panic("unhandled default case")
 		}
 	}
 	return nil
