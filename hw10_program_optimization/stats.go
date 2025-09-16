@@ -35,7 +35,7 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 
 	result := make(DomainStat)
 	var rec struct {
-		Email string `json:"Email"`
+		Email string `json:"email"`
 	}
 
 	for scanner.Scan() {
