@@ -23,62 +23,60 @@ type telnetClient struct {
 }
 
 func NewTelnetClient(address string, timeout time.Duration, in io.ReadCloser, out io.Writer) TelnetClient {
-	return &telnetClient{address: address, timeout: timeout, in: in, out: out}
+	return &telnetClient{
+		address: address,
+		timeout: timeout,
+		in:      in,
+		out:     out,
+	}
 }
 
-func (c *telnetClient) Connect() error {
-	d := net.Dialer{Timeout: c.timeout}
-	conn, err := d.Dial("tcp", c.address)
+func (tc *telnetClient) Connect() error {
+	conn, err := net.DialTimeout("tcp", tc.address, tc.timeout)
 	if err != nil {
 		return err
 	}
-	c.conn = conn
+	tc.conn = conn
 	return nil
 }
 
-func (c *telnetClient) Close() error {
-	if c.conn != nil {
-		return c.conn.Close()
+func (tc *telnetClient) Close() error {
+	if tc.conn != nil {
+		return tc.conn.Close()
 	}
 	return nil
 }
 
-func (c *telnetClient) Send() error {
-	if c.conn == nil {
+func (tc *telnetClient) Send() error {
+	if tc.conn == nil {
 		return io.ErrClosedPipe
 	}
-	r := bufio.NewReader(c.in)
-	b, err := r.ReadBytes('\n')
-	if len(b) > 0 {
-		if _, werr := c.conn.Write(b); werr != nil {
-			return werr
-		}
-	}
-	if err != nil && err != io.EOF {
+
+	scanner := bufio.NewScanner(tc.in)
+	if scanner.Scan() {
+		line := scanner.Text() + "\n"
+		_, err := tc.conn.Write([]byte(line))
 		return err
 	}
-	if err == io.EOF && len(b) == 0 {
-		return io.EOF
+
+	if err := scanner.Err(); err != nil {
+		return err
 	}
-	return nil
+
+	return io.EOF
 }
 
-func (c *telnetClient) Receive() error {
-	if c.conn == nil {
+func (tc *telnetClient) Receive() error {
+	if tc.conn == nil {
 		return io.ErrClosedPipe
 	}
-	r := bufio.NewReader(c.conn)
-	b, err := r.ReadBytes('\n')
-	if len(b) > 0 {
-		if _, werr := c.out.Write(b); werr != nil {
-			return werr
-		}
-	}
-	if err != nil && err != io.EOF {
+
+	reader := bufio.NewReader(tc.conn)
+	line, err := reader.ReadString('\n')
+	if err != nil {
 		return err
 	}
-	if err == io.EOF && len(b) == 0 {
-		return io.EOF
-	}
-	return nil
+
+	_, err = tc.out.Write([]byte(line))
+	return err
 }
