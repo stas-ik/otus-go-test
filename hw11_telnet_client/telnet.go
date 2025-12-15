@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"io"
 	"net"
 	"time"
@@ -31,52 +30,33 @@ func NewTelnetClient(address string, timeout time.Duration, in io.ReadCloser, ou
 	}
 }
 
-func (tc *telnetClient) Connect() error {
-	conn, err := net.DialTimeout("tcp", tc.address, tc.timeout)
-	if err != nil {
-		return err
+func (t *telnetClient) Connect() error {
+	var err error
+	t.conn, err = net.DialTimeout("tcp", t.address, t.timeout)
+	return err
+}
+
+func (t *telnetClient) Close() error {
+	if t.conn != nil {
+		return t.conn.Close()
 	}
-	tc.conn = conn
 	return nil
 }
 
-func (tc *telnetClient) Close() error {
-	if tc.conn != nil {
-		return tc.conn.Close()
-	}
-	return nil
-}
-
-func (tc *telnetClient) Send() error {
-	if tc.conn == nil {
+func (t *telnetClient) Send() error {
+	if t.conn == nil {
 		return io.ErrClosedPipe
 	}
 
-	scanner := bufio.NewScanner(tc.in)
-	if scanner.Scan() {
-		line := scanner.Text() + "\n"
-		_, err := tc.conn.Write([]byte(line))
-		return err
-	}
-
-	if err := scanner.Err(); err != nil {
-		return err
-	}
-
-	return io.EOF
+	_, err := io.Copy(t.conn, t.in)
+	return err
 }
 
-func (tc *telnetClient) Receive() error {
-	if tc.conn == nil {
+func (t *telnetClient) Receive() error {
+	if t.conn == nil {
 		return io.ErrClosedPipe
 	}
 
-	reader := bufio.NewReader(tc.conn)
-	line, err := reader.ReadString('\n')
-	if err != nil {
-		return err
-	}
-
-	_, err = tc.out.Write([]byte(line))
+	_, err := io.Copy(t.out, t.conn)
 	return err
 }
