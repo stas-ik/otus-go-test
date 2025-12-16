@@ -1,27 +1,13 @@
 package main
 
-import (
-	"encoding/json"
-	"fmt"
-	"os"
-)
+import "fmt"
 
 var (
-	release   = "UNKNOWN"
-	buildDate = "UNKNOWN"
-	gitHash   = "UNKNOWN"
+	release   = "develop"
+	buildDate = "unknown"
+	gitHash   = "unknown"
 )
 
 func printVersion() {
-	if err := json.NewEncoder(os.Stdout).Encode(struct {
-		Release   string
-		BuildDate string
-		GitHash   string
-	}{
-		Release:   release,
-		BuildDate: buildDate,
-		GitHash:   gitHash,
-	}); err != nil {
-		fmt.Printf("error while decode version info: %v\n", err)
-	}
+	fmt.Printf("Release: %s\nBuild date: %s\nGit hash: %s\n", release, buildDate, gitHash)
 }
