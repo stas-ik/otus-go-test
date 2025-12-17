@@ -9,8 +9,7 @@ import (
 
 	//nolint:depguard // sqlx допустим во внутреннем пакете хранилища
 	"github.com/jmoiron/sqlx"
-	// импортируем postgres драйвер для регистрации через database/sql
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" //nolint:depguard // импортируем postgres драйвер для регистрации через database/sql.
 	//nolint:depguard // внутренний пакет используется по архитектуре приложения
 	"github.com/stas-ik/otus-go-test/hw12_13_14_15_calendar/internal/storage"
 )
@@ -36,7 +35,7 @@ func (s *Storage) Connect(ctx context.Context) error {
 	return nil
 }
 
-func (s *Storage) Close(ctx context.Context) error {
+func (s *Storage) Close(_ context.Context) error {
 	if s.db != nil {
 		return s.db.Close()
 	}

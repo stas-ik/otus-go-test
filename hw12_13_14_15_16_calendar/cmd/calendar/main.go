@@ -67,7 +67,7 @@ func main() {
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
-	defer cancel()
+	// do not defer cancel here to avoid gocritic exitAfterDefer warning when using os.Exit
 
 	go func() {
 		<-ctx.Done()
