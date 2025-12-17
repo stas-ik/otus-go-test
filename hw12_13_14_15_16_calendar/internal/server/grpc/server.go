@@ -1,3 +1,5 @@
+//go:build grpcapi
+
 package grpcserver
 
 import (
