@@ -2,6 +2,49 @@ syntax = "proto3";
 
 package event;
 
+option go_package = "github.com/stas-ik/otus-go-test/hw12_13_14_15_calendar/api/gen;gen";
+
+import "google/protobuf/timestamp.proto";
+
 message Event {
-    // TODO
+  string id = 1;
+  string title = 2;
+  google.protobuf.Timestamp start_time = 3;
+  google.protobuf.Timestamp end_time = 4;
+  string description = 5;
+  string user_id = 6;
+  google.protobuf.Timestamp notify_at = 7; // optional; zero means absent
+}
+
+message CreateEventRequest {
+  Event event = 1; // id должен быть задан клиентом (UUID)
+}
+message CreateEventResponse {}
+
+message UpdateEventRequest {
+  string id = 1;
+  Event event = 2;
+}
+message UpdateEventResponse {}
+
+message DeleteEventRequest { string id = 1; }
+message DeleteEventResponse {}
+
+message GetEventByIDRequest { string id = 1; }
+message GetEventByIDResponse { Event event = 1; }
+
+message ListForDayRequest { google.protobuf.Timestamp date = 1; }
+message ListForWeekRequest { google.protobuf.Timestamp start = 1; }
+message ListForMonthRequest { google.protobuf.Timestamp start = 1; }
+
+message ListEventsResponse { repeated Event events = 1; }
+
+service CalendarService {
+  rpc CreateEvent(CreateEventRequest) returns (CreateEventResponse);
+  rpc UpdateEvent(UpdateEventRequest) returns (UpdateEventResponse);
+  rpc DeleteEvent(DeleteEventRequest) returns (DeleteEventResponse);
+  rpc GetEventByID(GetEventByIDRequest) returns (GetEventByIDResponse);
+  rpc ListEventsForDay(ListForDayRequest) returns (ListEventsResponse);
+  rpc ListEventsForWeek(ListForWeekRequest) returns (ListEventsResponse);
+  rpc ListEventsForMonth(ListForMonthRequest) returns (ListEventsResponse);
 }
