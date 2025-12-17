@@ -9,12 +9,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/stas-ik/otus-go-test/hw12_13_14_15_calendar/internal/app"
-	"github.com/stas-ik/otus-go-test/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/stas-ik/otus-go-test/hw12_13_14_15_calendar/internal/server/http"
-	"github.com/stas-ik/otus-go-test/hw12_13_14_15_calendar/internal/storage"
-	memorystorage "github.com/stas-ik/otus-go-test/hw12_13_14_15_calendar/internal/storage/memory"
-	sqlstorage "github.com/stas-ik/otus-go-test/hw12_13_14_15_calendar/internal/storage/sql"
+	"github.com/stas-ik/otus-go-test/hw12_13_14_15_calendar/internal/app"                          //nolint:depguard
+	"github.com/stas-ik/otus-go-test/hw12_13_14_15_calendar/internal/logger"                       //nolint:depguard
+	internalhttp "github.com/stas-ik/otus-go-test/hw12_13_14_15_calendar/internal/server/http"     //nolint:depguard
+	"github.com/stas-ik/otus-go-test/hw12_13_14_15_calendar/internal/storage"                      //nolint:depguard
+	memorystorage "github.com/stas-ik/otus-go-test/hw12_13_14_15_calendar/internal/storage/memory" //nolint:depguard
+	sqlstorage "github.com/stas-ik/otus-go-test/hw12_13_14_15_calendar/internal/storage/sql"       //nolint:depguard
 )
 
 var configFile string
@@ -47,11 +47,13 @@ func main() {
 	case "sql":
 		sqlStorage := sqlstorage.New(config.Database.DSN)
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
 		if err := sqlStorage.Connect(ctx); err != nil {
 			logg.Error(fmt.Sprintf("Failed to connect to database: %v", err))
+			cancel()
 			os.Exit(1)
 		}
+		// Завершаем контекст после установления соединения
+		cancel()
 		stor = sqlStorage
 		logg.Info("Using SQL storage")
 	default:

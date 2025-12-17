@@ -2,11 +2,12 @@ package memorystorage
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/stas-ik/otus-go-test/hw12_13_14_15_calendar/internal/storage"
+	"github.com/stas-ik/otus-go-test/hw12_13_14_15_calendar/internal/storage" //nolint:depguard
 )
 
 func TestStorage_CreateEvent(t *testing.T) {
@@ -47,7 +48,7 @@ func TestStorage_CreateEvent_InvalidEvent(t *testing.T) {
 	}
 
 	err := s.CreateEvent(ctx, event)
-	if err != storage.ErrInvalidEvent {
+	if !errors.Is(err, storage.ErrInvalidEvent) {
 		t.Errorf("Expected ErrInvalidEvent, got %v", err)
 	}
 }
@@ -82,7 +83,7 @@ func TestStorage_CreateEvent_DateBusy(t *testing.T) {
 	}
 
 	err = s.CreateEvent(ctx, event2)
-	if err != storage.ErrDateBusy {
+	if !errors.Is(err, storage.ErrDateBusy) {
 		t.Errorf("Expected ErrDateBusy, got %v", err)
 	}
 
@@ -143,7 +144,7 @@ func TestStorage_UpdateEvent_NotFound(t *testing.T) {
 	}
 
 	err := s.UpdateEvent(ctx, "999", event)
-	if err != storage.ErrEventNotFound {
+	if !errors.Is(err, storage.ErrEventNotFound) {
 		t.Errorf("Expected ErrEventNotFound, got %v", err)
 	}
 }
@@ -168,7 +169,7 @@ func TestStorage_DeleteEvent(t *testing.T) {
 	}
 
 	_, err = s.GetEventByID(ctx, "1")
-	if err != storage.ErrEventNotFound {
+	if !errors.Is(err, storage.ErrEventNotFound) {
 		t.Errorf("Expected ErrEventNotFound after deletion, got %v", err)
 	}
 }
@@ -215,6 +216,7 @@ func TestStorage_ListEventsForDay(t *testing.T) {
 }
 
 func TestStorage_ConcurrentAccess(t *testing.T) {
+	t.Parallel()
 	s := New()
 	ctx := context.Background()
 

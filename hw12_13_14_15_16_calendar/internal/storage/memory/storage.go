@@ -19,7 +19,7 @@ func New() *Storage {
 	}
 }
 
-func (s *Storage) CreateEvent(ctx context.Context, event storage.Event) error {
+func (s *Storage) CreateEvent(_ context.Context, event storage.Event) error {
 	if event.ID == "" || event.Title == "" {
 		return storage.ErrInvalidEvent
 	}
@@ -35,7 +35,7 @@ func (s *Storage) CreateEvent(ctx context.Context, event storage.Event) error {
 	return nil
 }
 
-func (s *Storage) UpdateEvent(ctx context.Context, id string, event storage.Event) error {
+func (s *Storage) UpdateEvent(_ context.Context, id string, event storage.Event) error {
 	if event.Title == "" {
 		return storage.ErrInvalidEvent
 	}
@@ -56,7 +56,7 @@ func (s *Storage) UpdateEvent(ctx context.Context, id string, event storage.Even
 	return nil
 }
 
-func (s *Storage) DeleteEvent(ctx context.Context, id string) error {
+func (s *Storage) DeleteEvent(_ context.Context, id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -68,7 +68,7 @@ func (s *Storage) DeleteEvent(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *Storage) GetEventByID(ctx context.Context, id string) (*storage.Event, error) {
+func (s *Storage) GetEventByID(_ context.Context, id string) (*storage.Event, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -80,21 +80,21 @@ func (s *Storage) GetEventByID(ctx context.Context, id string) (*storage.Event, 
 	return &event, nil
 }
 
-func (s *Storage) ListEventsForDay(ctx context.Context, date time.Time) ([]storage.Event, error) {
+func (s *Storage) ListEventsForDay(_ context.Context, date time.Time) ([]storage.Event, error) {
 	startOfDay := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
 	endOfDay := startOfDay.Add(24 * time.Hour)
 
 	return s.listEventsBetween(startOfDay, endOfDay), nil
 }
 
-func (s *Storage) ListEventsForWeek(ctx context.Context, startDate time.Time) ([]storage.Event, error) {
+func (s *Storage) ListEventsForWeek(_ context.Context, startDate time.Time) ([]storage.Event, error) {
 	startOfWeek := time.Date(startDate.Year(), startDate.Month(), startDate.Day(), 0, 0, 0, 0, startDate.Location())
 	endOfWeek := startOfWeek.Add(7 * 24 * time.Hour)
 
 	return s.listEventsBetween(startOfWeek, endOfWeek), nil
 }
 
-func (s *Storage) ListEventsForMonth(ctx context.Context, startDate time.Time) ([]storage.Event, error) {
+func (s *Storage) ListEventsForMonth(_ context.Context, startDate time.Time) ([]storage.Event, error) {
 	startOfMonth := time.Date(startDate.Year(), startDate.Month(), 1, 0, 0, 0, 0, startDate.Location())
 	endOfMonth := startOfMonth.AddDate(0, 1, 0)
 

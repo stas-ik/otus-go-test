@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 type Server struct {
@@ -28,11 +29,11 @@ func NewServer(logger Logger, app Application, host, port string) *Server {
 	mux := http.NewServeMux()
 
 	// Hello endpoint
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("hello world"))
 	})
-	mux.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/hello", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("hello world"))
 	})
@@ -41,8 +42,9 @@ func NewServer(logger Logger, app Application, host, port string) *Server {
 	handler := loggingMiddleware(logger)(mux)
 
 	srv := &http.Server{
-		Addr:    fmt.Sprintf("%s:%s", host, port),
-		Handler: handler,
+		Addr:              fmt.Sprintf("%s:%s", host, port),
+		Handler:           handler,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	return &Server{

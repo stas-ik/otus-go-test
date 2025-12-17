@@ -3,11 +3,15 @@ package sqlstorage
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
+	//nolint:depguard // sqlx допустим во внутреннем пакете хранилища
 	"github.com/jmoiron/sqlx"
+	// импортируем postgres драйвер для регистрации через database/sql
 	_ "github.com/lib/pq"
+	//nolint:depguard // внутренний пакет используется по архитектуре приложения
 	"github.com/stas-ik/otus-go-test/hw12_13_14_15_calendar/internal/storage"
 )
 
@@ -147,7 +151,7 @@ func (s *Storage) GetEventByID(ctx context.Context, id string) (*storage.Event, 
 	`
 
 	err := s.db.GetContext(ctx, &event, query, id)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, storage.ErrEventNotFound
 	}
 	if err != nil {
