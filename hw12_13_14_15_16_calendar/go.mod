@@ -1,6 +1,6 @@
 module github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar
 
-go 1.25
+go 1.23
 
 require (
     github.com/jmoiron/sqlx v1.4.0
