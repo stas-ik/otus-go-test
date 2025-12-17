@@ -4,8 +4,8 @@ logger:
 server:
   host: "localhost"
   port: "8080"
-  grpc_host: "localhost"
-  grpc_port: "50051"
+  grpcHost: "localhost"
+  grpcPort: "50051"
 
 storage:
   type: "memory"  # "memory" or "sql"

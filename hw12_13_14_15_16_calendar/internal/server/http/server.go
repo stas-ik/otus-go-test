@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage"
+	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage" //nolint:depguard
 )
 
 type Server struct {
@@ -89,11 +89,11 @@ func (s *Server) Stop(ctx context.Context) error {
 type eventDTO struct {
 	ID          string     `json:"id,omitempty"`
 	Title       string     `json:"title"`
-	StartTime   time.Time  `json:"start_time"`
-	EndTime     time.Time  `json:"end_time"`
+	StartTime   time.Time  `json:"startTime"`
+	EndTime     time.Time  `json:"endTime"`
 	Description string     `json:"description,omitempty"`
-	UserID      string     `json:"user_id"`
-	NotifyAt    *time.Time `json:"notify_at,omitempty"`
+	UserID      string     `json:"userId"`
+	NotifyAt    *time.Time `json:"notifyAt,omitempty"`
 }
 
 func toDTO(e storage.Event) eventDTO {
