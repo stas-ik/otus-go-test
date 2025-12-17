@@ -69,7 +69,6 @@ func (s *Storage) CreateEvent(ctx context.Context, event storage.Event) error {
 		event.UserID,
 		event.NotifyAt,
 	)
-
 	if err != nil {
 		return fmt.Errorf("failed to create event: %w", err)
 	}
@@ -114,7 +113,6 @@ func (s *Storage) UpdateEvent(ctx context.Context, id string, event storage.Even
 		event.UserID,
 		event.NotifyAt,
 	)
-
 	if err != nil {
 		return fmt.Errorf("failed to update event: %w", err)
 	}
