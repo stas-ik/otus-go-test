@@ -25,7 +25,7 @@ type Logger interface {
 	Error(msg string)
 }
 
-// Application — интерфейс доменной логики, используемый HTTP-слоем.
+// Application - интерфейс доменной логики, используемый HTTP-слоем.
 type Application interface {
 	CreateEvent(ctx context.Context, event storage.Event) error
 	UpdateEvent(ctx context.Context, id string, event storage.Event) error
