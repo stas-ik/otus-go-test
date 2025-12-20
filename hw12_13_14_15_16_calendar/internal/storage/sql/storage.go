@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq" // postgres-драйвер для database/sql
+
+	// postgres-driver for database/sql
+	_ "github.com/lib/pq"
 
 	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage" // используется по архитектуре приложения
 )
