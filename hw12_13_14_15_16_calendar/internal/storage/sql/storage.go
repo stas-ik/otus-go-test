@@ -9,7 +9,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" // register postgres driver for database/sql
 
 	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage"
 )
