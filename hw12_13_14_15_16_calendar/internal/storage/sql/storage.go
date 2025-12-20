@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq" //nolint:depguard // импортируем postgres драйвер для регистрации через database/sql.
-	//nolint:depguard // внутренний пакет используется по архитектуре приложения
-	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage"
+	_ "github.com/lib/pq" //nolint:depguard // postgres-драйвер для database/sql
+
+	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage" //nolint:depguard // используется по архитектуре приложения
 )
 
 type Storage struct {

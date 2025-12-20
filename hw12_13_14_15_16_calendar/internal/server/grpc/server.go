@@ -8,7 +8,6 @@ import (
 	"net"
 	"time"
 
-	gen "github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/api/gen"
 	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
