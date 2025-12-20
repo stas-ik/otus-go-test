@@ -16,16 +16,16 @@ type MockStorage struct {
 	deleteOldCalled bool
 }
 
-func (m *MockStorage) GetEventsToNotify(ctx context.Context) ([]storage.Event, error) {
+func (m *MockStorage) GetEventsToNotify(_ context.Context) ([]storage.Event, error) {
 	return m.eventsToNotify, nil
 }
 
-func (m *MockStorage) MarkEventNotified(ctx context.Context, id string) error {
+func (m *MockStorage) MarkEventNotified(_ context.Context, id string) error {
 	m.notifiedIDs = append(m.notifiedIDs, id)
 	return nil
 }
 
-func (m *MockStorage) DeleteOldEvents(ctx context.Context, olderThan time.Time) error {
+func (m *MockStorage) DeleteOldEvents(_ context.Context, _ time.Time) error {
 	m.deleteOldCalled = true
 	return nil
 }

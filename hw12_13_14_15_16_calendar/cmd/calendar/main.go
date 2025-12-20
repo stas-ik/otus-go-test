@@ -9,13 +9,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/app"                          //nolint:depguard
-	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/config"                       //nolint:depguard
-	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/logger"                       //nolint:depguard
-	internalhttp "github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/server/http"     //nolint:depguard
-	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage"                      //nolint:depguard
-	memorystorage "github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage/memory" //nolint:depguard
-	sqlstorage "github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage/sql"       //nolint:depguard
+	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/app"
+	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/config"
+	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/logger"
+	internalhttp "github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/server/http"
+	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage"
+	memorystorage "github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage/memory"
+	sqlstorage "github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage/sql"
 )
 
 var configFile string

@@ -14,14 +14,23 @@ import (
 	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/rabbitmq"
 )
 
-var configFile string
+var (
+	configFile string
+	version    bool
+)
 
 func init() {
 	flag.StringVar(&configFile, "config", "./configs/config.yaml", "Path to configuration file")
+	flag.BoolVar(&version, "version", false, "Show version")
 }
 
 func main() {
 	flag.Parse()
+
+	if version {
+		printVersion()
+		return
+	}
 
 	conf, err := config.NewConfig(configFile)
 	if err != nil {
@@ -34,14 +43,14 @@ func main() {
 	rmq, err := rabbitmq.NewClient(conf.RabbitMQ.URL, conf.RabbitMQ.Queue)
 	if err != nil {
 		logg.Error(fmt.Sprintf("Failed to connect to RabbitMQ: %v", err))
-		os.Exit(1)
+		return
 	}
 	defer rmq.Close()
 
 	msgs, err := rmq.Consume()
 	if err != nil {
 		logg.Error(fmt.Sprintf("Failed to start consuming: %v", err))
-		os.Exit(1)
+		return
 	}
 
 	logg.Info("sender is running...")

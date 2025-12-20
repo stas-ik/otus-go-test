@@ -16,14 +16,23 @@ import (
 	sqlstorage "github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage/sql"
 )
 
-var configFile string
+var (
+	configFile string
+	version    bool
+)
 
 func init() {
 	flag.StringVar(&configFile, "config", "./configs/config.yaml", "Path to configuration file")
+	flag.BoolVar(&version, "version", false, "Show version")
 }
 
 func main() {
 	flag.Parse()
+
+	if version {
+		printVersion()
+		return
+	}
 
 	conf, err := config.NewConfig(configFile)
 	if err != nil {
@@ -39,7 +48,7 @@ func main() {
 	if err := stor.Connect(ctx); err != nil {
 		logg.Error(fmt.Sprintf("Failed to connect to database: %v", err))
 		cancel()
-		os.Exit(1)
+		return
 	}
 	cancel()
 	defer stor.Close(context.Background())
@@ -48,7 +57,7 @@ func main() {
 	rmq, err := rabbitmq.NewClient(conf.RabbitMQ.URL, conf.RabbitMQ.Queue)
 	if err != nil {
 		logg.Error(fmt.Sprintf("Failed to connect to RabbitMQ: %v", err))
-		os.Exit(1)
+		return
 	}
 	defer rmq.Close()
 

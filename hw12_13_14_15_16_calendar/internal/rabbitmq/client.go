@@ -9,10 +9,10 @@ import (
 )
 
 type Notification struct {
-	EventID   string    `json:"event_id"`
+	EventID   string    `json:"eventId"`
 	Title     string    `json:"title"`
-	StartTime time.Time `json:"start_time"`
-	UserID    string    `json:"user_id"`
+	StartTime time.Time `json:"startTime"`
+	UserID    string    `json:"userId"`
 }
 
 type Client struct {
