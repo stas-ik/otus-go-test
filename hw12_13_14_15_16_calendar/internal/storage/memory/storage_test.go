@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage"
+	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage" //nolint:depguard
 )
 
 func TestStorage_CreateEvent(t *testing.T) {
