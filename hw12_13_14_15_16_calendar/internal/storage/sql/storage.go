@@ -9,10 +9,9 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	// postgres-driver for database/sql
 	_ "github.com/lib/pq"
 
-	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage" // используется по архитектуре приложения
+	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage"
 )
 
 type Storage struct {
