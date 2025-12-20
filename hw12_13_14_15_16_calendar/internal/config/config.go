@@ -1,8 +1,9 @@
-package main
+package config
 
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -12,6 +13,8 @@ type Config struct {
 	Server   ServerConf   `yaml:"server"`
 	Storage  StorageConf  `yaml:"storage"`
 	Database DatabaseConf `yaml:"database"`
+	RabbitMQ RabbitMQConf `yaml:"rabbitmq"`
+	Schedule ScheduleConf `yaml:"schedule"`
 }
 
 type LoggerConf struct {
@@ -31,6 +34,16 @@ type StorageConf struct {
 
 type DatabaseConf struct {
 	DSN string `yaml:"dsn"`
+}
+
+type RabbitMQConf struct {
+	URL   string `yaml:"url"`
+	Queue string `yaml:"queue"`
+}
+
+type ScheduleConf struct {
+	ScanInterval    time.Duration `yaml:"scanInterval"`
+	CleanupInterval time.Duration `yaml:"cleanupInterval"`
 }
 
 func NewConfig(configPath string) (*Config, error) {

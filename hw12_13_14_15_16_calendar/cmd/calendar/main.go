@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/app"                          //nolint:depguard
+	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/config"                       //nolint:depguard
 	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/logger"                       //nolint:depguard
 	internalhttp "github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/server/http"     //nolint:depguard
 	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage"                      //nolint:depguard
@@ -31,21 +32,21 @@ func main() {
 		return
 	}
 
-	config, err := NewConfig(configFile)
+	conf, err := config.NewConfig(configFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)
 		os.Exit(1)
 	}
 
-	logg := logger.New(config.Logger.Level)
+	logg := logger.New(conf.Logger.Level)
 
 	var stor storage.Storage
-	switch config.Storage.Type {
+	switch conf.Storage.Type {
 	case "memory":
 		stor = memorystorage.New()
 		logg.Info("Using in-memory storage")
 	case "sql":
-		sqlStorage := sqlstorage.New(config.Database.DSN)
+		sqlStorage := sqlstorage.New(conf.Database.DSN)
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		if err := sqlStorage.Connect(ctx); err != nil {
 			logg.Error(fmt.Sprintf("Failed to connect to database: %v", err))
@@ -57,13 +58,13 @@ func main() {
 		stor = sqlStorage
 		logg.Info("Using SQL storage")
 	default:
-		logg.Error(fmt.Sprintf("Unknown storage type: %s", config.Storage.Type))
+		logg.Error(fmt.Sprintf("Unknown storage type: %s", conf.Storage.Type))
 		os.Exit(1)
 	}
 
 	calendar := app.New(logg, stor)
 
-	server := internalhttp.NewServer(logg, calendar, config.Server.Host, config.Server.Port)
+	server := internalhttp.NewServer(logg, calendar, conf.Server.Host, conf.Server.Port)
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)

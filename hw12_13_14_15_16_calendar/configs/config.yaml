@@ -8,7 +8,15 @@ server:
   grpcPort: "50051"
 
 storage:
-  type: "memory"  # "memory" or "sql"
+  type: "sql"  # "memory" or "sql"
 
 database:
   dsn: "host=localhost port=5432 user=calendar password=calendar dbname=calendar sslmode=disable"
+
+rabbitmq:
+  url: "amqp://guest:guest@localhost:5672/"
+  queue: "calendar_notifications"
+
+schedule:
+  scanInterval: "1m"
+  cleanupInterval: "24h"
