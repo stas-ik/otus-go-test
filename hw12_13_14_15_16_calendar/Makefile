@@ -25,14 +25,21 @@ version: build
 test:
 	go test -race -count 100 ./internal/...
 
+generate:
+	protoc -I api \
+		--go_out=api/gen --go_opt=paths=source_relative \
+		--go-grpc_out=api/gen --go-grpc_opt=paths=source_relative \
+		api/EventService.proto
+
 install-lint-deps:
-	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.62.2
+	# Install golangci-lint to GOPATH/bin
+	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.63.4
 
 lint: install-lint-deps
-	golangci-lint run ./...
+	$(shell go env GOPATH)/bin/golangci-lint run ./...
 
 migrate:
 	@echo "To run migrations manually, use:"
 	@echo "psql -U calendar -d calendar -f migrations/001_init.sql"
 
-.PHONY: build run build-img run-img version test lint migrate install-lint-deps
+.PHONY: build run build-img run-img version test lint migrate install-lint-deps generate
