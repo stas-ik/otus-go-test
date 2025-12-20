@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/app"
-	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/config"
+	cfg "github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/config"
 	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/logger"
 	internalhttp "github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/server/http"
 	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage"
@@ -18,21 +18,25 @@ import (
 	sqlstorage "github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage/sql"
 )
 
-var configFile string
+var (
+	configFile string
+	version    bool
+)
 
 func init() {
 	flag.StringVar(&configFile, "config", "./configs/config.yaml", "Path to configuration file")
+	flag.BoolVar(&version, "version", false, "Show version")
 }
 
 func main() {
 	flag.Parse()
 
-	if flag.Arg(0) == "version" {
+	if version {
 		printVersion()
 		return
 	}
 
-	conf, err := config.NewConfig(configFile)
+	conf, err := cfg.NewConfig(configFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)
 		os.Exit(1)
