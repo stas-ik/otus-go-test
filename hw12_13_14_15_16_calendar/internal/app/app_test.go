@@ -48,15 +48,15 @@ func (m *mockStorage) GetEventByID(_ context.Context, id string) (*storage.Event
 	return &ev, nil
 }
 
-func (m *mockStorage) ListEventsForDay(_ context.Context, date time.Time) ([]storage.Event, error) {
+func (m *mockStorage) ListEventsForDay(_ context.Context, _ time.Time) ([]storage.Event, error) {
 	return nil, m.err
 }
 
-func (m *mockStorage) ListEventsForWeek(_ context.Context, startDate time.Time) ([]storage.Event, error) {
+func (m *mockStorage) ListEventsForWeek(_ context.Context, _ time.Time) ([]storage.Event, error) {
 	return nil, m.err
 }
 
-func (m *mockStorage) ListEventsForMonth(_ context.Context, startDate time.Time) ([]storage.Event, error) {
+func (m *mockStorage) ListEventsForMonth(_ context.Context, _ time.Time) ([]storage.Event, error) {
 	return nil, m.err
 }
 
@@ -64,11 +64,11 @@ func (m *mockStorage) GetEventsToNotify(_ context.Context) ([]storage.Event, err
 	return nil, m.err
 }
 
-func (m *mockStorage) MarkEventNotified(_ context.Context, id string) error {
+func (m *mockStorage) MarkEventNotified(_ context.Context, _ string) error {
 	return m.err
 }
 
-func (m *mockStorage) DeleteOldEvents(_ context.Context, olderThan time.Time) error {
+func (m *mockStorage) DeleteOldEvents(_ context.Context, _ time.Time) error {
 	return m.err
 }
 

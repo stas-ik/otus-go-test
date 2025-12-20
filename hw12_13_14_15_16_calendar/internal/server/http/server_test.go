@@ -18,7 +18,7 @@ type mockApplication struct {
 	err    error
 }
 
-func (m *mockApplication) CreateEvent(ctx context.Context, event storage.Event) error {
+func (m *mockApplication) CreateEvent(_ context.Context, event storage.Event) error {
 	if m.err != nil {
 		return m.err
 	}
@@ -26,7 +26,7 @@ func (m *mockApplication) CreateEvent(ctx context.Context, event storage.Event) 
 	return nil
 }
 
-func (m *mockApplication) UpdateEvent(ctx context.Context, id string, event storage.Event) error {
+func (m *mockApplication) UpdateEvent(_ context.Context, id string, event storage.Event) error {
 	if m.err != nil {
 		return m.err
 	}
@@ -37,7 +37,7 @@ func (m *mockApplication) UpdateEvent(ctx context.Context, id string, event stor
 	return nil
 }
 
-func (m *mockApplication) DeleteEvent(ctx context.Context, id string) error {
+func (m *mockApplication) DeleteEvent(_ context.Context, id string) error {
 	if m.err != nil {
 		return m.err
 	}
@@ -45,7 +45,7 @@ func (m *mockApplication) DeleteEvent(ctx context.Context, id string) error {
 	return nil
 }
 
-func (m *mockApplication) GetEventByID(ctx context.Context, id string) (*storage.Event, error) {
+func (m *mockApplication) GetEventByID(_ context.Context, id string) (*storage.Event, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -56,7 +56,7 @@ func (m *mockApplication) GetEventByID(ctx context.Context, id string) (*storage
 	return &ev, nil
 }
 
-func (m *mockApplication) ListEventsForDay(ctx context.Context, date time.Time) ([]storage.Event, error) {
+func (m *mockApplication) ListEventsForDay(_ context.Context, date time.Time) ([]storage.Event, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -69,14 +69,14 @@ func (m *mockApplication) ListEventsForDay(ctx context.Context, date time.Time) 
 	return res, nil
 }
 
-func (m *mockApplication) ListEventsForWeek(ctx context.Context, startDate time.Time) ([]storage.Event, error) {
+func (m *mockApplication) ListEventsForWeek(_ context.Context, _ time.Time) ([]storage.Event, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
 	return nil, nil // Simple mock
 }
 
-func (m *mockApplication) ListEventsForMonth(ctx context.Context, startDate time.Time) ([]storage.Event, error) {
+func (m *mockApplication) ListEventsForMonth(_ context.Context, _ time.Time) ([]storage.Event, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -85,8 +85,8 @@ func (m *mockApplication) ListEventsForMonth(ctx context.Context, startDate time
 
 type mockLogger struct{}
 
-func (m *mockLogger) Info(msg string)  {}
-func (m *mockLogger) Error(msg string) {}
+func (m *mockLogger) Info(_ string)  {}
+func (m *mockLogger) Error(_ string) {}
 
 func TestServer_CreateEvent(t *testing.T) {
 	mockApp := &mockApplication{events: make(map[string]storage.Event)}
