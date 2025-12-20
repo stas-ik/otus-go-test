@@ -13,7 +13,7 @@ type mockStorage struct {
 	err    error
 }
 
-func (m *mockStorage) CreateEvent(ctx context.Context, event storage.Event) error {
+func (m *mockStorage) CreateEvent(_ context.Context, event storage.Event) error {
 	if m.err != nil {
 		return m.err
 	}
@@ -21,7 +21,7 @@ func (m *mockStorage) CreateEvent(ctx context.Context, event storage.Event) erro
 	return nil
 }
 
-func (m *mockStorage) UpdateEvent(ctx context.Context, id string, event storage.Event) error {
+func (m *mockStorage) UpdateEvent(_ context.Context, id string, event storage.Event) error {
 	if m.err != nil {
 		return m.err
 	}
@@ -29,7 +29,7 @@ func (m *mockStorage) UpdateEvent(ctx context.Context, id string, event storage.
 	return nil
 }
 
-func (m *mockStorage) DeleteEvent(ctx context.Context, id string) error {
+func (m *mockStorage) DeleteEvent(_ context.Context, id string) error {
 	if m.err != nil {
 		return m.err
 	}
@@ -37,7 +37,7 @@ func (m *mockStorage) DeleteEvent(ctx context.Context, id string) error {
 	return nil
 }
 
-func (m *mockStorage) GetEventByID(ctx context.Context, id string) (*storage.Event, error) {
+func (m *mockStorage) GetEventByID(_ context.Context, id string) (*storage.Event, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -48,40 +48,40 @@ func (m *mockStorage) GetEventByID(ctx context.Context, id string) (*storage.Eve
 	return &ev, nil
 }
 
-func (m *mockStorage) ListEventsForDay(ctx context.Context, date time.Time) ([]storage.Event, error) {
+func (m *mockStorage) ListEventsForDay(_ context.Context, date time.Time) ([]storage.Event, error) {
 	return nil, m.err
 }
 
-func (m *mockStorage) ListEventsForWeek(ctx context.Context, startDate time.Time) ([]storage.Event, error) {
+func (m *mockStorage) ListEventsForWeek(_ context.Context, startDate time.Time) ([]storage.Event, error) {
 	return nil, m.err
 }
 
-func (m *mockStorage) ListEventsForMonth(ctx context.Context, startDate time.Time) ([]storage.Event, error) {
+func (m *mockStorage) ListEventsForMonth(_ context.Context, startDate time.Time) ([]storage.Event, error) {
 	return nil, m.err
 }
 
-func (m *mockStorage) GetEventsToNotify(ctx context.Context) ([]storage.Event, error) {
+func (m *mockStorage) GetEventsToNotify(_ context.Context) ([]storage.Event, error) {
 	return nil, m.err
 }
 
-func (m *mockStorage) MarkEventNotified(ctx context.Context, id string) error {
+func (m *mockStorage) MarkEventNotified(_ context.Context, id string) error {
 	return m.err
 }
 
-func (m *mockStorage) DeleteOldEvents(ctx context.Context, olderThan time.Time) error {
+func (m *mockStorage) DeleteOldEvents(_ context.Context, olderThan time.Time) error {
 	return m.err
 }
 
 type mockLogger struct{}
 
-func (m *mockLogger) Debug(msg string)                          {}
-func (m *mockLogger) Info(msg string)                           {}
-func (m *mockLogger) Warn(msg string)                           {}
-func (m *mockLogger) Error(msg string)                          {}
-func (m *mockLogger) Debugf(format string, args ...interface{}) {}
-func (m *mockLogger) Infof(format string, args ...interface{})  {}
-func (m *mockLogger) Warnf(format string, args ...interface{})  {}
-func (m *mockLogger) Errorf(format string, args ...interface{}) {}
+func (m *mockLogger) Debug(_ string)                    {}
+func (m *mockLogger) Info(_ string)                     {}
+func (m *mockLogger) Warn(_ string)                     {}
+func (m *mockLogger) Error(_ string)                    {}
+func (m *mockLogger) Debugf(_ string, _ ...interface{}) {}
+func (m *mockLogger) Infof(_ string, _ ...interface{})  {}
+func (m *mockLogger) Warnf(_ string, _ ...interface{})  {}
+func (m *mockLogger) Errorf(_ string, _ ...interface{}) {}
 
 func TestApp(t *testing.T) {
 	ms := &mockStorage{events: make(map[string]storage.Event)}
