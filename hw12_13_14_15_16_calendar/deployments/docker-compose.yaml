@@ -1,1 +1,94 @@
-version: "3"
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER:-calendar}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-calendar}
+      POSTGRES_DB: ${DB_NAME:-calendar}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrations:
+    image: postgres:15-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ../migrations:/migrations
+    environment:
+      PGPASSWORD: ${DB_PASSWORD:-calendar}
+    command: >
+      sh -c "psql -h postgres -U ${DB_USER:-calendar} -d ${DB_NAME:-calendar} -f /migrations/001_init.sql &&
+             psql -h postgres -U ${DB_USER:-calendar} -d ${DB_NAME:-calendar} -f /migrations/002_add_notified.sql"
+
+  calendar:
+    build:
+      context: ..
+      dockerfile: build/Dockerfile
+      args:
+        BIN_FILE: calendar
+        CMD_PATH: cmd/calendar/*.go
+        LDFLAGS: ${LDFLAGS:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    ports:
+      - "8888:8080"
+    environment:
+      CONFIG_FILE: /etc/calendar/config.yaml
+    volumes:
+      - ./config.docker.yaml:/etc/calendar/config.yaml
+
+  scheduler:
+    build:
+      context: ..
+      dockerfile: build/Dockerfile
+      args:
+        BIN_FILE: scheduler
+        CMD_PATH: cmd/calendar_scheduler/*.go
+        LDFLAGS: ${LDFLAGS:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    volumes:
+      - ./config.docker.yaml:/etc/calendar/config.yaml
+
+  sender:
+    build:
+      context: ..
+      dockerfile: build/Dockerfile
+      args:
+        BIN_FILE: sender
+        CMD_PATH: cmd/calendar_sender/*.go
+        LDFLAGS: ${LDFLAGS:-}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    volumes:
+      - ./config.docker.yaml:/etc/calendar/config.yaml
