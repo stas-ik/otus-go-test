@@ -7,10 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	//nolint:depguard // sqlx допустим во внутреннем пакете хранилища
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq" //nolint:depguard // импортируем postgres драйвер для регистрации через database/sql.
-	//nolint:depguard // внутренний пакет используется по архитектуре приложения
+	_ "github.com/lib/pq" // register postgres driver for database/sql
 	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage"
 )
 
@@ -56,8 +54,8 @@ func (s *Storage) CreateEvent(ctx context.Context, event storage.Event) error {
 	}
 
 	query := `
-		INSERT INTO events (id, title, start_time, end_time, description, user_id, notify_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO events (id, title, start_time, end_time, description, user_id, notify_at, notified)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
 
 	_, err = s.db.ExecContext(ctx, query,
@@ -68,6 +66,7 @@ func (s *Storage) CreateEvent(ctx context.Context, event storage.Event) error {
 		event.Description,
 		event.UserID,
 		event.NotifyAt,
+		event.Notified,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create event: %w", err)
@@ -100,7 +99,7 @@ func (s *Storage) UpdateEvent(ctx context.Context, id string, event storage.Even
 
 	query := `
 		UPDATE events
-		SET title = $2, start_time = $3, end_time = $4, description = $5, user_id = $6, notify_at = $7
+		SET title = $2, start_time = $3, end_time = $4, description = $5, user_id = $6, notify_at = $7, notified = $8
 		WHERE id = $1
 	`
 
@@ -112,6 +111,7 @@ func (s *Storage) UpdateEvent(ctx context.Context, id string, event storage.Even
 		event.Description,
 		event.UserID,
 		event.NotifyAt,
+		event.Notified,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to update event: %w", err)
@@ -142,7 +142,7 @@ func (s *Storage) GetEventByID(ctx context.Context, id string) (*storage.Event, 
 	var event storage.Event
 
 	query := `
-		SELECT id, title, start_time, end_time, description, user_id, notify_at
+		SELECT id, title, start_time, end_time, description, user_id, notify_at, notified
 		FROM events
 		WHERE id = $1
 	`
@@ -183,7 +183,7 @@ func (s *Storage) listEventsBetween(ctx context.Context, start, end time.Time) (
 	var events []storage.Event
 
 	query := `
-		SELECT id, title, start_time, end_time, description, user_id, notify_at
+		SELECT id, title, start_time, end_time, description, user_id, notify_at, notified
 		FROM events
 		WHERE start_time >= $1 AND start_time < $2
 		ORDER BY start_time
@@ -219,4 +219,43 @@ func (s *Storage) isTimeBusy(ctx context.Context, excludeID, userID string, star
 	}
 
 	return busy, nil
+}
+
+func (s *Storage) GetEventsToNotify(ctx context.Context) ([]storage.Event, error) {
+	var events []storage.Event
+
+	query := `
+		SELECT id, title, start_time, end_time, description, user_id, notify_at, notified
+		FROM events
+		WHERE notified = FALSE AND notify_at <= NOW()
+	`
+
+	err := s.db.SelectContext(ctx, &events, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get events to notify: %w", err)
+	}
+
+	if events == nil {
+		events = []storage.Event{}
+	}
+
+	return events, nil
+}
+
+func (s *Storage) MarkEventNotified(ctx context.Context, id string) error {
+	query := `UPDATE events SET notified = TRUE WHERE id = $1`
+	_, err := s.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("failed to mark event as notified: %w", err)
+	}
+	return nil
+}
+
+func (s *Storage) DeleteOldEvents(ctx context.Context, olderThan time.Time) error {
+	query := `DELETE FROM events WHERE start_time < $1`
+	_, err := s.db.ExecContext(ctx, query, olderThan)
+	if err != nil {
+		return fmt.Errorf("failed to delete old events: %w", err)
+	}
+	return nil
 }

@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage" //nolint:depguard
+	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage"
 )
 
 type Storage struct {
@@ -114,6 +114,45 @@ func (s *Storage) listEventsBetween(start, end time.Time) []storage.Event {
 	}
 
 	return result
+}
+
+func (s *Storage) GetEventsToNotify(_ context.Context) ([]storage.Event, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var result []storage.Event
+	now := time.Now()
+	for _, event := range s.events {
+		if !event.Notified && event.NotifyAt != nil && (event.NotifyAt.Before(now) || event.NotifyAt.Equal(now)) {
+			result = append(result, event)
+		}
+	}
+	return result, nil
+}
+
+func (s *Storage) MarkEventNotified(_ context.Context, id string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	event, exists := s.events[id]
+	if !exists {
+		return storage.ErrEventNotFound
+	}
+	event.Notified = true
+	s.events[id] = event
+	return nil
+}
+
+func (s *Storage) DeleteOldEvents(_ context.Context, olderThan time.Time) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for id, event := range s.events {
+		if event.StartTime.Before(olderThan) {
+			delete(s.events, id)
+		}
+	}
+	return nil
 }
 
 func (s *Storage) isTimeBusyLocked(excludeID, userID string, start, end time.Time) bool {

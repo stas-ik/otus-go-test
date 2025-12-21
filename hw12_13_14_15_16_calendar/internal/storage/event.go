@@ -10,4 +10,5 @@ type Event struct {
 	Description string
 	UserID      string
 	NotifyAt    *time.Time
+	Notified    bool
 }
