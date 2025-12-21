@@ -18,5 +18,5 @@ rabbitmq:
   queue: "calendar_notifications"
 
 schedule:
-  scanInterval: "1m"
+  scanInterval: "5s"
   cleanupInterval: "24h"

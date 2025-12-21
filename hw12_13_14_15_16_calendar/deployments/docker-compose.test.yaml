@@ -96,5 +96,5 @@ services:
       - ..:/go/src/app
     working_dir: /go/src/app
     environment:
-      CALENDAR_URL: http://calendar:8080
+      CALENDAR_URL: http://calendar:8080/api
     command: go test -v integration_test.go
