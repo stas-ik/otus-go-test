@@ -1,0 +1,100 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: calendar
+      POSTGRES_PASSWORD: calendar
+      POSTGRES_DB: calendar
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U calendar -d calendar"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrations:
+    image: postgres:15-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ../migrations:/migrations
+    environment:
+      PGPASSWORD: calendar
+    command: >
+      sh -c "psql -h postgres -U calendar -d calendar -f /migrations/001_init.sql &&
+             psql -h postgres -U calendar -d calendar -f /migrations/002_add_notified.sql"
+
+  calendar:
+    build:
+      context: ..
+      dockerfile: build/Dockerfile
+      args:
+        BIN_FILE: calendar
+        CMD_PATH: cmd/calendar/*.go
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    volumes:
+      - ./config.docker.yaml:/etc/calendar/config.yaml
+
+  scheduler:
+    build:
+      context: ..
+      dockerfile: build/Dockerfile
+      args:
+        BIN_FILE: scheduler
+        CMD_PATH: cmd/calendar_scheduler/*.go
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    volumes:
+      - ./config.docker.yaml:/etc/calendar/config.yaml
+
+  sender:
+    build:
+      context: ..
+      dockerfile: build/Dockerfile
+      args:
+        BIN_FILE: sender
+        CMD_PATH: cmd/calendar_sender/*.go
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    volumes:
+      - ./config.docker.yaml:/etc/calendar/config.yaml
+
+  tests:
+    image: golang:1.23
+    depends_on:
+      calendar:
+        condition: service_started
+      scheduler:
+        condition: service_started
+      sender:
+        condition: service_started
+    volumes:
+      - ..:/go/src/app
+    working_dir: /go/src/app
+    environment:
+      CALENDAR_URL: http://calendar:8080/api
+    command: go test -v integration_test.go

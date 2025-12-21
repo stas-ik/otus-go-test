@@ -12,6 +12,7 @@ import (
 	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/config"
 	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/logger"
 	"github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/rabbitmq"
+	sqlstorage "github.com/stas-ik/otus-go-test/hw12_13_14_15_16_calendar/internal/storage/sql"
 )
 
 var (
@@ -39,6 +40,13 @@ func main() {
 	}
 
 	logg := logger.New(conf.Logger.Level)
+
+	stor := sqlstorage.New(conf.Database.DSN)
+	if err := stor.Connect(context.Background()); err != nil {
+		logg.Error(fmt.Sprintf("Failed to connect to database: %v", err))
+		return
+	}
+	defer stor.Close(context.Background())
 
 	rmq, err := rabbitmq.NewClient(conf.RabbitMQ.URL, conf.RabbitMQ.Queue)
 	if err != nil {
@@ -74,6 +82,10 @@ func main() {
 				continue
 			}
 			logg.Infof("Notification: EventID=%s, Title=%s, UserID=%s, StartTime=%v", n.EventID, n.Title, n.UserID, n.StartTime)
+
+			if err := stor.MarkEventNotified(context.Background(), n.EventID); err != nil {
+				logg.Error(fmt.Sprintf("failed to mark event as notified: %v", err))
+			}
 		}
 	}
 }

@@ -31,6 +31,16 @@ version: build
 test:
 	go test -count 1 ./internal/...
 
+up:
+	docker-compose -f deployments/docker-compose.yaml up --build -d
+
+down:
+	docker-compose -f deployments/docker-compose.yaml down
+
+integration-tests:
+	docker-compose -f deployments/docker-compose.test.yaml up --build --exit-code-from tests
+	docker-compose -f deployments/docker-compose.test.yaml down
+
 generate:
 	protoc -I api \
 		--go_out=api/gen --go_opt=paths=source_relative \
